@@ -5,39 +5,44 @@ import plotly.graph_objects as go
 import seaborn as sns
 
 
-def read_csv(path_in):
-	return pd.read_csv(path_in)
-
-
-def describe(df):
-	df_numbers = df.select_dtypes(include=["number"])
-	median = df_numbers.median()
-	mean = df_numbers.mean()
-	std = df_numbers.std()
-	q1 = df_numbers.quantile(0.25)
-	q3 = df_numbers.quantile(0.75)
-	iqr = q3 - q1
-	count = df_numbers.count()
-	min_col = df_numbers.min()
-	max_col = df_numbers.max()
-	mode = df_numbers.mode()
-	data = {
-		'count': count,
-		'median': median.tolist(),
-		'mean': mean.tolist(),
-		'std': std.tolist(),
-		'25%': q1.tolist(),
-		'50%': median.tolist(),
-		'75%': q3.tolist(),
-		'iqr': iqr.tolist(),
-		'min': min_col.tolist(),
-		'max': max_col.tolist(),
-		'mode': mode.values[0]
-	}
-	df_result = pd.DataFrame(data)
-	df_axis_1 = df_result.T
-	df_axis_1.columns = df_numbers.columns
-	print(df_numbers.columns)
+def descriptive (df):
+    df_numeric= df.select_dtypes(include=["number"])
+    df_count = df_numeric.count()       # count
+    df_mean = df_numeric.mean()         # mean
+    df_median = df_numeric.median()     # median
+    df_mode = df_numeric.mode()         # mode
+    df_min = df_numeric.min()           # min
+    df_max = df_numeric.max()           # max
+    df_Q1 = df_numeric.quantile(0.25)   # Q1
+    df_Q2 = df_numeric.quantile(0.5)    # Q2
+    df_Q3 = df_numeric.quantile(0.75)   # Q3
+    df_IQR = df_Q3 - df_Q1              # IQR
+    df_variance = df_numeric.var()      # variance
+    df_stdev = df_numeric.std()         # stdev
+    # tập hợp các chỉ số thông kê mô tả thành 1 dic
+    data = {
+        "Count   ": [i for i in df_count],
+        "Mean    ": [i for i in df_mean],
+        "Median  ": [i for i in df_median],
+        "Mode    ": [i for i in df_mode.values[0]],
+        "Min     ": [i for i in df_min],
+        "Max     ": [i for i in df_max],
+        "Q1      ": [i for i in df_Q1],
+        "Q2      ": [i for i in df_Q1],
+        "Q3      ": [i for i in df_Q3],
+        "IQR     ": [i for i in df_IQR],
+        "Variance": [i for i in df_variance],
+        "Stdev   ": [i for i in df_stdev],
+    }
+    # chuyển dữ liệu từ dạng dic sang DataFrame
+    df_data = pd.DataFrame(data)
+    # gán nhãn cho các cột thông qua keys() của dữ liệu số ban đầu
+    df_data.index = df_numeric.keys()
+    # sử dụng transpose() để chuyển cột thành hàng, hàng thành cột
+    des_complete = df_data.transpose()
+    # làm tròn giá trị
+    des_complete = des_complete.round(2)
+    print(des_complete.to_string())
 
 
 # print(df_axis_1.to_csv("describe.csv"))
@@ -59,11 +64,13 @@ def check_duplicates(df):
 def line_chart(df, column, title, y_label):
 	# Plotting the closing price over time
 	plt.plot(df.index, df[column])
-	plt.title(title)
-	plt.xlabel('Date')
-	plt.ylabel(y_label)
-	# Rotate x-axis labels
-	plt.xticks(rotation=45)
+	plt.title(title,fontsize=14)
+	plt.xlabel('Date',fontsize=14)
+	plt.ylabel(y_label,fontsize=14)
+	plt.xticks(fontsize=14,rotation=45)
+	plt.yticks(fontsize=14)
+	
+	plt.grid()
 	plt.show()
 
 
@@ -77,8 +84,10 @@ def candlestick_chart(df):
 			close=df['Close_Gold']
 		)]
 	)
-	fig.update_layout(title='Biểu đồ nến vàng', xaxis_title='Date', yaxis_title='Price')
-	
+	fig.update_layout(title='Biểu đồ nến vàng', xaxis_title='Date', yaxis_title='Price',font=dict(
+			size=18,  # Set the font size here
+		))
+
 	# Display the figure
 	fig.show()
 
@@ -126,38 +135,72 @@ def box_plot(df):
 	plt.show()
 
 
-def regression(df):
-	from sklearn.model_selection import train_test_split
-	from sklearn.preprocessing import StandardScaler
-	from sklearn.linear_model import Lasso
-	from sklearn.model_selection import GridSearchCV
-	
-	from sklearn.metrics import mean_squared_error, r2_score
-	X = df[['Volume', 'SP500', 'Close_Oil', 'DollarIndex']]
-	y = df['Close_Gold']
-	X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-	scaler = StandardScaler()
-	X_train = scaler.fit_transform(X_train)
-	X_test = scaler.transform(X_test)
-	# Sử dụng GridSearchCV để tìm giá trị alpha tối ưu
-	lasso = Lasso()
-	params = { 'alpha': [0.1, 0.5, 1.0, 5.0, 10.0] }
-	grid_search = GridSearchCV(lasso, param_grid=params, cv=5)
-	grid_search.fit(X_train, y_train)
-	
-	best_alpha = grid_search.best_params_['alpha']
-	print("Best alpha:", best_alpha)
-	lasso_model = Lasso(alpha=best_alpha)
-	lasso_model.fit(X_train, y_train)
-	y_pred = lasso_model.predict(X_test)
-	mse = mean_squared_error(y_test, y_pred)
-	r2 = r2_score(y_test, y_pred)
-	
-	print("Mean Squared Error:", mse)
-	print("R2 Score:", r2)
-	print("y_pred", y_pred)
-	feature_importance = pd.Series(lasso_model.coef_, index=X.columns)
-	print("Feature importance:\n", feature_importance)
+
+def scatter_plot(df):
+    plt.figure(figsize=(10, 6))
+    # Vẽ biểu đồ phân tán
+    plt.scatter(df['Volume'], df['Close_Gold'], alpha=0.5, color='r', label="Gold Price vs Volume")
+    # Đặt tiêu đề và nhãn cho trục
+    plt.title('Scatter Plot of Volume vs Close Prices')
+    plt.xlabel('Volume (hợp đồng)')
+    plt.ylabel('Close Price (USD)')
+    # Tùy chỉnh các mốc giá trị trên trục x (Volume) và y (Close)
+    plt.xticks(np.arange(0, 400000, 20000))  # Tăng các mốc giá trị trục X từ 0 đến 400 (đơn vị nghìn), cách nhau 10
+    plt.yticks(np.arange(1000, 2701, 100))  # Tăng các mốc giá trị trục Y từ 1000 đến 2700, cách nhau 100
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+
+# ============================ HEATMAP (Bản đồ nhiệt của ma trận tương quan) ============================
+def heatmap(df):
+    # Tính toán ma trận tương quan
+    corr_matrix = df[['Close_Gold', 'Close_SP500', 'Close_Oil', 'Close_DollarIndex']].corr()
+    # Vẽ heatmap
+    plt.figure(figsize=(6, 4))
+    sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', linewidths=0.5)
+    plt.title("Correlation Heatmap of Close_Gold, Close_SP500, Close_Oil, Close_DollarIndex")
+    plt.show()
+
+
+# ============================ Moving Average Chart (Biểu đồ trung bình trượt) ============================
+def MA_chart(df):
+    # Đảm bảo cột 'Date' ở định dạng datetime
+    df['Date'] = pd.to_datetime(df['Date'])
+
+    # Đặt cột 'Date' làm index để dễ dàng vẽ đồ thị
+    df.set_index('Date', inplace=True)
+
+    # Tính trung bình trượt 20 ngày, 100 ngày
+    df['MA20'] = df['Close_Gold'].rolling(window=20).mean()
+    df['MA100'] = df['Close_Gold'].rolling(window=100).mean()
+    df['MA200'] = df['Close_Gold'].rolling(window=200).mean()
+
+    # Vẽ biểu đồ
+    fig, ax = plt.subplots(figsize=(10, 8))
+    ax.plot(df.index, df['Close_Gold'], label='Close Price', color='blue')
+    ax.plot(df.index, df['MA20'], label='20-Day MA', color='red')
+    ax.plot(df.index, df['MA100'], label='100-Day MA', color='black')
+    ax.plot(df.index, df['MA200'], label='200-Day MA', color='green')
+
+    # Đặt tên cho trục và tiêu đề biểu đồ
+    plt.title('Gold Price with Moving Averages')
+    plt.xlabel('Date')
+    plt.ylabel('Price (USD)')
+
+    # Hiển thị legend và lưới
+    plt.legend()
+    plt.grid(True)
+
+    # Lấy các ngày giao dịch đầu tiên của mỗi năm
+    first_days_of_year = df.resample('YS').first().index  # Lấy ngày đầu năm
+
+    # Đặt các ngày đầu năm làm nhãn cho trục x
+    ax.set_xticks(first_days_of_year)  # Đặt các vị trí cho trục x
+    ax.set_xticklabels(first_days_of_year.strftime('%Y-%m-%d'), rotation=45, ha='right')  # Đặt nhãn cho các vị trí
+
+    # Hiển thị biểu đồ
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -167,12 +210,16 @@ if __name__ == '__main__':
 	# Gọi các hàm và hiển thị dữ liệu
 	missing_data(df)
 	check_duplicates(df)
-	describe(df)
-	line_chart(df, "Close_Gold", 'Giá vàng', 'Giá')
-	line_chart(df, "DollarIndex", 'Chỉ số DXY', 'Điểm')
-	line_chart(df, "SP500", 'Chỉ số SP500', 'Điểm')
-	line_chart(df, "Close_Oil", 'Giá dầu', 'Giá')
-	box_plot(df)
-	bar_chart(df)
-	histogram(df)
+	descriptive(df)
+	# line_chart(df, "Close_Gold", 'Giá vàng', 'Giá')
+	# line_chart(df, "DollarIndex", 'Chỉ số DXY', 'Điểm')
+	# line_chart(df, "SP500", 'Chỉ số SP500', 'Điểm')
+	# line_chart(df, "Close_Oil", 'Giá dầu', 'Giá')
+	# box_plot(df)
+	# bar_chart(df)
+	# histogram(df)
 	candlestick_chart(df)
+	# MA_chart(df)
+	# heatmap(df)
+	# scatter_plot(df)
+	
