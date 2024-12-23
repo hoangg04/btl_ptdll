@@ -6,6 +6,37 @@ import seaborn as sns
 
 
 def descriptive (df):
+    """
+    Hàm tính toán các chỉ số thống kê mô tả cho dữ liệu số trong DataFrame.
+
+    Parameters:
+    ----------
+    df : pandas.DataFrame
+        DataFrame đầu vào cần tính toán thống kê mô tả.
+
+    Returns:
+    -------
+    None
+        In ra bảng thống kê mô tả với các chỉ số sau:
+        - Count: Số lượng giá trị
+        - Mean: Giá trị trung bình
+        - Median: Giá trị trung vị
+        - Mode: Giá trị xuất hiện nhiều nhất
+        - Min: Giá trị nhỏ nhất
+        - Max: Giá trị lớn nhất 
+        - Q1: Tứ phân vị thứ nhất (25%)
+        - Q2: Tứ phân vị thứ hai (50%)
+        - Q3: Tứ phân vị thứ ba (75%)
+        - IQR: Khoảng tứ phân vị
+        - Variance: Phương sai
+        - Stdev: Độ lệch chuẩn
+
+    Notes:
+    -----
+    - Chỉ xử lý các cột có kiểu dữ liệu số
+    - Kết quả được làm tròn đến 2 chữ số thập phân
+    - Dữ liệu được hiển thị dưới dạng bảng với các cột là các biến số và các hàng là các chỉ số thống kê
+    """
     df_numeric= df.select_dtypes(include=["number"])
     df_count = df_numeric.count()       # count
     df_mean = df_numeric.mean()         # mean
