@@ -59,7 +59,7 @@ def descriptive (df):
         "Min     ": [i for i in df_min],
         "Max     ": [i for i in df_max],
         "Q1      ": [i for i in df_Q1],
-        "Q2      ": [i for i in df_Q1],
+        "Q2      ": [i for i in df_Q2],
         "Q3      ": [i for i in df_Q3],
         "IQR     ": [i for i in df_IQR],
         "Variance": [i for i in df_variance],
@@ -73,6 +73,7 @@ def descriptive (df):
     des_complete = df_data.transpose()
     # làm tròn giá trị
     des_complete = des_complete.round(2)
+    des_complete.to_csv("descriptive.csv")
     print(des_complete.to_string())
 
 
@@ -238,19 +239,18 @@ if __name__ == '__main__':
 	df = pd.read_csv('Data_gold_oil_dollar_sp500.csv')
 	df["Date"] = pd.to_datetime(df["Date"])  # Chuyển đổi Date sang kiểu datetime
 	df.set_index("Date", inplace=True)  # Đặt Date làm index
-	# Gọi các hàm và hiển thị dữ liệu
 	missing_data(df)
 	check_duplicates(df)
 	descriptive(df)
-	# line_chart(df, "Close_Gold", 'Giá vàng', 'Giá')
-	# line_chart(df, "DollarIndex", 'Chỉ số DXY', 'Điểm')
-	# line_chart(df, "SP500", 'Chỉ số SP500', 'Điểm')
-	# line_chart(df, "Close_Oil", 'Giá dầu', 'Giá')
-	# box_plot(df)
-	# bar_chart(df)
-	# histogram(df)
+	line_chart(df, "Close_Gold", 'Giá vàng', 'Giá')
+	line_chart(df, "DollarIndex", 'Chỉ số DXY', 'Điểm')
+	line_chart(df, "SP500", 'Chỉ số SP500', 'Điểm')
+	line_chart(df, "Close_Oil", 'Giá dầu', 'Giá')
+	box_plot(df)
+	bar_chart(df)
+	histogram(df)
 	candlestick_chart(df)
-	# MA_chart(df)
-	# heatmap(df)
-	# scatter_plot(df)
+	MA_chart(df)
+	heatmap(df)
+	scatter_plot(df)
 	

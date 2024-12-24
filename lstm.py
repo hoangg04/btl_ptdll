@@ -300,3 +300,7 @@ results_df = cross_validate_and_report(data_scaled, time_steps=10, n_splits=10, 
 model.save("gold_price_model.keras")
 import joblib
 joblib.dump(scaler, "scaler.pkl")
+
+
+
+
